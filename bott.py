@@ -289,4 +289,15 @@ async def main():
     print("🛑 Бот остановлен.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import asyncio
+
+    import nest_asyncio
+    nest_asyncio.apply()
+
+    from telegram.ext import ApplicationBuilder
+    app = ApplicationBuilder().token(TOKEN).build()
+    # добавляем все хендлеры здесь
+    # ...
+    app.run_polling()
+
+
