@@ -11,7 +11,7 @@ from telegram import (
     InlineKeyboardMarkup,
     BotCommand
 )
-from telegram.error import Forbidden
+from telegram.error import Forbidden, TelegramError
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -21,7 +21,7 @@ from telegram.ext import (
 
 # 🔐 Загрузка токена из .env
 load_dotenv()
-TOKEN = ("8240784830:AAH4FXWAOGu-17imAZbVno7xbMqLktoISiQ")
+TOKEN = os.getenv("BOT_TOKEN") or "8240784830:AAH4FXWAOGu-17imAZbVno7xbMqLktoISiQ"
 
 if not TOKEN:
     raise ValueError("❌ Токен не найден! Укажи его в .env файле как BOT_TOKEN=...")
@@ -35,7 +35,6 @@ items = {1: "Камень", 2: "Ножницы", 3: "Бумага"}
 # Глобальные данные
 scores = {}
 total_wins = {}
-
 
 # 🔄 Загрузка данных
 async def load_data():
@@ -53,7 +52,6 @@ async def load_data():
     else:
         print("📂 data.json не найден — будет создан при первой игре.")
 
-
 # 💾 Сохранение данных
 async def save_data():
     try:
@@ -63,7 +61,6 @@ async def save_data():
         print("💾 Данные сохранены.")
     except Exception as e:
         print(f"⚠️ Ошибка сохранения: {e}")
-
 
 # 🏠 /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -85,7 +82,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown",
     )
 
-
 # 📜 /rules
 async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
@@ -98,7 +94,6 @@ async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(text, parse_mode="Markdown")
 
-
 # ℹ️ /help
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -110,7 +105,6 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/help — помощь",
         parse_mode="Markdown",
     )
-
 
 # 🧮 /score
 async def score(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -131,7 +125,6 @@ async def score(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🏅 *Текущие очки:*\n" + "\n".join(lines), parse_mode="Markdown"
     )
 
-
 # 🏆 /top
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not total_wins:
@@ -151,7 +144,6 @@ async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🏆 *ТОП-10 игроков:*\n" + "\n".join(lines), parse_mode="Markdown"
     )
-
 
 # ⚔️ Игровая логика
 async def play(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -220,7 +212,6 @@ async def play(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await safe_edit(query, text, keyboard)
     await save_data()
 
-
 # Безопасное редактирование сообщений
 async def safe_edit(query, text, keyboard):
     try:
@@ -229,7 +220,6 @@ async def safe_edit(query, text, keyboard):
         )
     except TelegramError:
         pass
-
 
 # Обработка меню-кнопок
 async def handle_menu(query, context):
@@ -268,13 +258,13 @@ async def handle_menu(query, context):
         await safe_edit(query, "🏆 *ТОП-10 игроков:*\n" + "\n".join(lines),
                         [[InlineKeyboardButton("🎮 Играть", callback_data="menu_play")]])
 
-
 # 🚀 Основной запуск
 async def main():
     print("🚀 Запуск бота...")
     await load_data()
     app = Application.builder().token(TOKEN).build()
 
+    # Добавляем обработчики команд
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("rules", rules))
@@ -282,6 +272,7 @@ async def main():
     app.add_handler(CommandHandler("top", top))
     app.add_handler(CallbackQueryHandler(play))
 
+    # Команды Telegram
     commands = [
         BotCommand("start", "Начать игру"),
         BotCommand("help", "Помощь"),
@@ -290,16 +281,12 @@ async def main():
         BotCommand("top", "Топ игроков"),
     ]
     await app.bot.set_my_commands(commands)
-
     print("✅ Команды добавлены в меню Telegram.")
+
+    # Запуск бота
     await app.run_polling(drop_pending_updates=True)
     await save_data()
     print("🛑 Бот остановлен.")
 
-
 if __name__ == "__main__":
-    import nest_asyncio
-    import asyncio
-
-    nest_asyncio.apply()
-    asyncio.get_event_loop().run_until_complete(main())
+    asyncio.run(main())
