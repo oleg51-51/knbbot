@@ -10,10 +10,9 @@ from telegram.ext import ApplicationBuilder, ContextTypes, CallbackQueryHandler,
 
 # 🔐 Загрузка токена
 load_dotenv()
-TOKEN = os.getenv("8240784830:AAH4FXWAOGu-17imAZbVno7xbMqLktoISiQ") or "8240784830:AAH4FXWAOGu-17imAZbVno7xbMqLktoISiQ"
+TOKEN = os.getenv("8240784830:AAH4FXWAOGu-17imAZbVno7xbMqLktoISiQ")
 
-if not TOKEN:
-    raise ValueError("❌ Токен не найден!")
+
 
 # 📁 Файл для данных
 DATA_FILE = "data.json"
@@ -191,6 +190,7 @@ if __name__ == "__main__":
 
     # Запуск FastAPI
     uvicorn.run(fastapi_app, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
 
 
